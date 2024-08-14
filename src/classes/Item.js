@@ -45,4 +45,28 @@ export default class Item extends Phaser.GameObjects.Image {
       },
     });
   }
+
+  scaleItem(
+    targetX,
+    targetY,
+    ease = "Sine.easeIn",
+    duration,
+    repeat = 1,
+    yoyo = false,
+    callback = () => {}
+  ) {
+    if (targetX === 0) targetX = this.scaleX;
+    if (targetY === 0) targetY = this.scaleY;
+
+    this.scene.tweens.add({
+      targets: this,
+      scaleX: targetX,
+      scaleY: targetY,
+      ease: ease,
+      duration: duration,
+      repeat: repeat,
+      yoyo: yoyo,
+      onComplete: callback,
+    });
+  }
 }
