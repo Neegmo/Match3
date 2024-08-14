@@ -31,7 +31,7 @@ export default class Field extends Phaser.GameObjects.Image {
 
   handleClick() {
     if (this.scene.state === 0) {
-      this.item.setScale(0.9);
+      this.item.setScale(1.1);
       this.scene.selectedCol = this.col;
       this.scene.selectedRow = this.row;
       this.scene.state = 1;

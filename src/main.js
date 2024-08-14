@@ -12,7 +12,8 @@ const config = {
     height: 1960,
   },
   scene: [FirstScene],
-  backgroundColor: "#6d9efc",
+  backgroundColor: "#ffffff",
+  //   backgroundColor: "#6d9efc",
 };
 
 export default new Phaser.Game(config);

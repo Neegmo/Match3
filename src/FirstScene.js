@@ -22,28 +22,11 @@ export default class FirstScene extends Phaser.Scene {
   }
 
   create() {
-    this.board = this.add.image(540, 980, "board").setTint(0x69ebfc);
-
-    // this.debugger = this.add
-    //   .image(330, 300, "board")
-    //   .setScale(0.4, 0.2)
-    //   .setTint(0x000000)
-    //   .setInteractive()
-    //   .on("pointerdown", () => {
-    //     console.log("Debugger 1 clicked!");
-
-    //     this.destroyMatchedItems();
-    //   });
-
-    // this.debugger2 = this.add
-    //   .image(750, 300, "board")
-    //   .setScale(0.4, 0.2)
-    //   .setTint(0xffffff)
-    //   .setInteractive()
-    //   .on("pointerdown", () => {
-    //     console.log("Debugger 2 clicked!");
-    //     this.populateEmptyFields();
-    //   });
+    this.board = this.add
+      .image(540, 980, "board")
+      //
+      .setTint(0x808080);
+    //   .setTint(0x69ebfc);
 
     this.createFields();
     this.createItems();
@@ -220,7 +203,6 @@ export default class FirstScene extends Phaser.Scene {
       this.populateEmptyFields();
     });
     // this.time.delayedCall(maxFallintTarget * 150 + 200, () => {
-    //   this.checkHeldItems();
     //   this.destroyMatchedItems();
     // });
   }
@@ -245,9 +227,6 @@ export default class FirstScene extends Phaser.Scene {
       }
     }
     this.checkHeldItems();
-
-    // this.time.delayedCall(100, () => {
-    //   this.checkForFallingItems();
-    // });
+    // this.destroyMatchedItems();
   }
 }
