@@ -26,7 +26,7 @@ export default class Field extends Phaser.GameObjects.Image {
     this.setInteractive();
 
     this.on("pointerdown", this.handleClick, this);
-    this.on("pointerup", this.handlePointerUp, this);
+    // this.on("pointerup", this.handlePointerUp, this);
   }
 
   handleClick() {
@@ -35,15 +35,19 @@ export default class Field extends Phaser.GameObjects.Image {
       this.item.setScale(1.1);
       this.scene.selectedCol = this.col;
       this.scene.selectedRow = this.row;
+      this.scene.selectedX = this.x;
+      this.scene.selectedY = this.y;
+      this.scene.startX = this.scene.input.x;
+      this.scene.startY = this.scene.input.y;
       this.scene.state = 1;
     }
   }
 
-  handlePointerUp() {
-    this.scene.nextCol = this.col;
-    this.scene.nextRow = this.row;
-    this.scene.swapItems();
-  }
+  // handlePointerUp() {
+  //   this.scene.nextCol = this.col;
+  //   this.scene.nextRow = this.row;
+  //   this.scene.swapItems();
+  // }
 
   checkCurrentItemHeld() {
     let hasAnItem = false;

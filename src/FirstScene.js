@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import Phaser, { FacebookInstantGamesLeaderboard } from "phaser";
 import Item from "./classes/Item";
 import Field from "./classes/Field";
 
@@ -46,12 +46,37 @@ export default class FirstScene extends Phaser.Scene {
       console.log("Game Started!");
       this.destroyMatchedItems();
     });
+
+    this.input.on("pointerdown", this.handlePointerDown, this);
+
+    this.input.on("pointerup", this.handlePointerUp, this);
+  }
+
+  update(time, delta) {
+    if (!this.gameStarted || true) return;
+    console.log(delta);
+
+    this.timerDecrementFactor += delta / 40000;
+
+    this.gameOverTimer -= (delta / 200) * this.timerDecrementFactor;
+    this.timeBar.setScale(this.gameOverTimer / 100, 1);
+
+    if (this.gameOverTimer <= 0) {
+      this.scene.start("first-scene");
+    }
+
+    this.scoreText.text = `${this.scoreValue}`;
   }
 
   initiateVariables() {
     this.state = 1;
     this.selectedCol = null;
     this.selectedRow = null;
+    this.selectedX = null;
+    this.selectedY = null;
+    this.startX = null;
+    this.startY = null;
+
     this.nextCol = null;
     this.nextRow = null;
 
@@ -83,24 +108,19 @@ export default class FirstScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
   }
 
-  createGameTimer() {
-    this.timeBar = this.add.image(540, 1550, "timeBar").setTint(0x808080);
+  handlePointerDown() {
+    // if (this.state !== 0) return;
+    // this.startX = this.input.x;
+    // this.startY = this.input.y;
   }
 
-  update(time, delta) {
-    if (!this.gameStarted) return;
-    console.log(delta);
+  handlePointerUp() {
+    if (this.state !== 1) return;
+    this.swapItems();
+  }
 
-    this.timerDecrementFactor += delta / 40000;
-
-    this.gameOverTimer -= (delta / 200) * this.timerDecrementFactor;
-    this.timeBar.setScale(this.gameOverTimer / 100, 1);
-
-    if (this.gameOverTimer <= 0) {
-      this.scene.start("first-scene");
-    }
-
-    this.scoreText.text = `${this.scoreValue}`;
+  createGameTimer() {
+    this.timeBar = this.add.image(540, 1550, "timeBar").setTint(0x808080);
   }
 
   createSounds() {
@@ -156,57 +176,122 @@ export default class FirstScene extends Phaser.Scene {
     }
   }
 
+  findNextField() {
+    const currentX = this.input.x;
+    const currentY = this.input.y;
+
+    const xDifference = this.startX - currentX;
+    const yDifference = this.startY - currentY;
+
+    if (
+      Math.abs(this.selectedX - currentX) < 70 &&
+      Math.abs(this.selectedY - currentY) < 70
+    )
+      return;
+
+    if (Math.abs(xDifference) > Math.abs(yDifference)) {
+      if (xDifference < 0 && this.selectedRow < 6) {
+        this.nextRow = this.selectedRow + 1;
+        this.nextCol = this.selectedCol;
+      } else if (xDifference > 0 && this.selectedRow > 0) {
+        this.nextRow = this.selectedRow - 1;
+        this.nextCol = this.selectedCol;
+      }
+    } else {
+      if (yDifference < 0 && this.selectedCol < 6) {
+        this.nextRow = this.selectedRow;
+        this.nextCol = this.selectedCol + 1;
+      } else if (yDifference > 0 && this.selectedCol > 0) {
+        this.nextRow = this.selectedRow;
+        this.nextCol = this.selectedCol - 1;
+      }
+    }
+  }
+
   swapItems() {
-    let colDifference = Math.abs(this.selectedCol - this.nextCol);
-    let rowDifference = Math.abs(this.selectedRow - this.nextRow);
+    this.findNextField();
+    console.log(
+      this.nextRow +
+        " " +
+        this.selectedRow +
+        " " +
+        this.nextCol +
+        " " +
+        this.selectedCol
+    );
+    if (
+      this.selectedCol !== null &&
+      this.nextCol !== null &&
+      this.selectedRow !== null &&
+      this.nextRow !== null
+    ) {
+      let colDifference = Math.abs(this.selectedCol - this.nextCol);
+      let rowDifference = Math.abs(this.selectedRow - this.nextRow);
+      console.log("Row dif: " + rowDifference);
+      console.log("Col dif: " + colDifference);
 
-    if (colDifference === 1 && rowDifference === 0) {
-      this.fields[this.selectedRow][this.selectedCol].item.setScale(1);
-      this.state = 0;
+      if (colDifference === 1 && rowDifference === 0) {
+        this.fields[this.selectedRow][this.selectedCol].item.setScale(1);
+        this.state = 0;
 
-      this.fields[this.selectedRow][this.selectedCol].item.moveItem(
-        0,
-        this.fields[this.nextRow][this.nextCol].y,
-        150
-      );
+        this.fields[this.selectedRow][this.selectedCol].item.moveItem(
+          0,
+          this.fields[this.nextRow][this.nextCol].y,
+          150
+        );
 
-      this.fields[this.nextRow][this.nextCol].item.moveItem(
-        0,
-        this.fields[this.selectedRow][this.selectedCol].y,
-        150
-      );
+        this.fields[this.nextRow][this.nextCol].item.moveItem(
+          0,
+          this.fields[this.selectedRow][this.selectedCol].y,
+          150
+        );
 
-      this.time.delayedCall(250, () => {
-        this.checkHeldItems();
-        this.destroyMatchedItems();
-      });
+        this.time.delayedCall(250, () => {
+          this.checkHeldItems();
+          this.destroyMatchedItems();
+        });
 
-      this.swipeSound.play();
+        this.swipeSound.play();
+      }
+
+      if (colDifference === 0 && rowDifference === 1) {
+        this.fields[this.selectedRow][this.selectedCol].item.setScale(1);
+        this.state = 0;
+
+        this.fields[this.selectedRow][this.selectedCol].item.moveItem(
+          this.fields[this.nextRow][this.nextCol].x,
+          0,
+          150
+        );
+
+        this.fields[this.nextRow][this.nextCol].item.moveItem(
+          this.fields[this.selectedRow][this.selectedCol].x,
+          0,
+          150
+        );
+
+        this.time.delayedCall(250, () => {
+          this.checkHeldItems();
+          this.destroyMatchedItems();
+        });
+
+        this.swipeSound.play();
+      }
     }
 
-    if (colDifference === 0 && rowDifference === 1) {
-      this.fields[this.selectedRow][this.selectedCol].item.setScale(1);
-      this.state = 0;
+    // this.resetFieldInfo();
+  }
 
-      this.fields[this.selectedRow][this.selectedCol].item.moveItem(
-        this.fields[this.nextRow][this.nextCol].x,
-        0,
-        150
-      );
+  resetFieldInfo() {
+    this.selectedCol = null;
+    this.selectedRow = null;
+    this.selectedX = null;
+    this.selectedY = null;
+    this.startX = null;
+    this.startY = null;
 
-      this.fields[this.nextRow][this.nextCol].item.moveItem(
-        this.fields[this.selectedRow][this.selectedCol].x,
-        0,
-        150
-      );
-
-      this.time.delayedCall(250, () => {
-        this.checkHeldItems();
-        this.destroyMatchedItems();
-      });
-
-      this.swipeSound.play();
-    }
+    this.nextCol = null;
+    this.nextRow = null;
   }
 
   checkRowMatches() {
