@@ -252,6 +252,7 @@ export default class FirstScene extends Phaser.Scene {
         });
 
         this.swipeSound.play();
+        this.resetFieldInfo();
       }
 
       if (colDifference === 0 && rowDifference === 1) {
@@ -276,10 +277,9 @@ export default class FirstScene extends Phaser.Scene {
         });
 
         this.swipeSound.play();
+        this.resetFieldInfo();
       }
     }
-
-    // this.resetFieldInfo();
   }
 
   resetFieldInfo() {
