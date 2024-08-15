@@ -184,8 +184,8 @@ export default class FirstScene extends Phaser.Scene {
     const yDifference = this.startY - currentY;
 
     if (
-      Math.abs(this.selectedX - currentX) < 70 &&
-      Math.abs(this.selectedY - currentY) < 70
+      Math.abs(this.selectedX - currentX) < 100 &&
+      Math.abs(this.selectedY - currentY) < 100
     )
       return;
 
