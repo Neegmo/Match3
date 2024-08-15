@@ -53,7 +53,7 @@ export default class FirstScene extends Phaser.Scene {
   }
 
   update(time, delta) {
-    if (!this.gameStarted || true) return;
+    if (!this.gameStarted) return;
     console.log(delta);
 
     this.timerDecrementFactor += delta / 40000;
@@ -210,15 +210,6 @@ export default class FirstScene extends Phaser.Scene {
 
   swapItems() {
     this.findNextField();
-    console.log(
-      this.nextRow +
-        " " +
-        this.selectedRow +
-        " " +
-        this.nextCol +
-        " " +
-        this.selectedCol
-    );
     if (
       this.selectedCol !== null &&
       this.nextCol !== null &&
@@ -227,12 +218,9 @@ export default class FirstScene extends Phaser.Scene {
     ) {
       let colDifference = Math.abs(this.selectedCol - this.nextCol);
       let rowDifference = Math.abs(this.selectedRow - this.nextRow);
-      console.log("Row dif: " + rowDifference);
-      console.log("Col dif: " + colDifference);
 
       if (colDifference === 1 && rowDifference === 0) {
         this.fields[this.selectedRow][this.selectedCol].item.setScale(1);
-        this.state = 0;
 
         this.fields[this.selectedRow][this.selectedCol].item.moveItem(
           0,
@@ -257,7 +245,6 @@ export default class FirstScene extends Phaser.Scene {
 
       if (colDifference === 0 && rowDifference === 1) {
         this.fields[this.selectedRow][this.selectedCol].item.setScale(1);
-        this.state = 0;
 
         this.fields[this.selectedRow][this.selectedCol].item.moveItem(
           this.fields[this.nextRow][this.nextCol].x,
@@ -372,17 +359,21 @@ export default class FirstScene extends Phaser.Scene {
       }
     }
 
-    if (!matchedItems) return;
+    if (matchedItems) {
+      this.time.delayedCall(150, () => {
+        this.burstSound.play();
+        if (this.gameOverTimer + 25 <= 100) this.gameOverTimer += 15;
+        else this.gameOverTimer = 100;
+      });
 
-    this.time.delayedCall(150, () => {
-      this.burstSound.play();
-      if (this.gameOverTimer + 25 <= 100) this.gameOverTimer += 15;
-      else this.gameOverTimer = 100;
-    });
-
-    this.time.delayedCall(250, () => {
-      this.checkForFallingItems();
-    });
+      this.time.delayedCall(250, () => {
+        this.checkForFallingItems();
+      });
+    } else {
+      this.time.delayedCall(250, () => {
+        this.state = 0;
+      });
+    }
   }
 
   checkForFallingItems() {
@@ -443,7 +434,10 @@ export default class FirstScene extends Phaser.Scene {
       }
     }
     this.checkHeldItems();
-    // this.destroyMatchedItems();
+    this.time.delayedCall(300, () => {
+      this.destroyMatchedItems();
+      this.state = 0;
+    });
   }
 
   loadFont(name, url) {
