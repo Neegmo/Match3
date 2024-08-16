@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 
 import FirstScene from "./FirstScene";
+import GameOverScene from "./GameOverScene";
 
 const config = {
   type: Phaser.AUTO,
@@ -11,7 +12,7 @@ const config = {
     width: 1080,
     height: 1960,
   },
-  scene: [FirstScene],
+  scene: [FirstScene, GameOverScene],
   backgroundColor: "#ffffff",
   //   backgroundColor: "#6d9efc",
 };

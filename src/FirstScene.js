@@ -40,12 +40,8 @@ export default class FirstScene extends Phaser.Scene {
 
     this.createSounds();
 
-    this.input.once("pointerdown", () => {
-      this.state = 0;
-      this.gameStarted = true;
-      console.log("Game Started!");
-      this.destroyMatchedItems();
-    });
+    // this.input.once("pointerdown", this.initiateTheGame, this);
+    this.destroyMatchedItems();
 
     this.input.on("pointerdown", this.handlePointerDown, this);
 
@@ -54,7 +50,6 @@ export default class FirstScene extends Phaser.Scene {
 
   update(time, delta) {
     if (!this.gameStarted) return;
-    console.log(delta);
 
     this.timerDecrementFactor += delta / 40000;
 
@@ -62,14 +57,17 @@ export default class FirstScene extends Phaser.Scene {
     this.timeBar.setScale(this.gameOverTimer / 100, 1);
 
     if (this.gameOverTimer <= 0) {
-      this.scene.start("first-scene");
+      this.scene.start("game-over-scene", { score: this.scoreValue });
     }
+  }
 
-    this.scoreText.text = `${this.scoreValue}`;
+  initiateTheGame() {
+    this.gameStarted = true;
+    console.log("Game Started!");
   }
 
   initiateVariables() {
-    this.state = 1;
+    this.state = 0;
     this.selectedCol = null;
     this.selectedRow = null;
     this.selectedX = null;
@@ -108,15 +106,11 @@ export default class FirstScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
   }
 
-  handlePointerDown() {
-    // if (this.state !== 0) return;
-    // this.startX = this.input.x;
-    // this.startY = this.input.y;
-  }
+  handlePointerDown() {}
 
   handlePointerUp() {
     if (this.state !== 1) return;
-    this.swapItems();
+    this.findSwapableItems();
   }
 
   createGameTimer() {
@@ -208,64 +202,59 @@ export default class FirstScene extends Phaser.Scene {
     }
   }
 
-  swapItems() {
+  findSwapableItems() {
     this.findNextField();
+    if (this.checkForSwapableColsAndRows()) {
+      let colDifference = Math.abs(this.selectedCol - this.nextCol);
+      let rowDifference = Math.abs(this.selectedRow - this.nextRow);
+
+      this.swapItems(rowDifference, colDifference);
+
+      this.time.delayedCall(250, () => {
+        this.checkHeldItems();
+        let shouldSwapBack = this.destroyMatchedItems();
+        if (!shouldSwapBack) {
+          console.log("ShouldSwapBack");
+          this.swapItems(rowDifference, colDifference);
+          this.time.delayedCall(250, () => {
+            this.state = 0;
+          });
+        }
+        this.resetFieldInfo();
+      });
+
+      this.swipeSound.play();
+    }
+  }
+
+  checkForSwapableColsAndRows() {
     if (
       this.selectedCol !== null &&
       this.nextCol !== null &&
       this.selectedRow !== null &&
       this.nextRow !== null
-    ) {
-      let colDifference = Math.abs(this.selectedCol - this.nextCol);
-      let rowDifference = Math.abs(this.selectedRow - this.nextRow);
+    )
+      return true;
+    else return false;
+  }
 
-      if (colDifference === 1 && rowDifference === 0) {
-        this.fields[this.selectedRow][this.selectedCol].item.setScale(1);
+  swapItems(rowDifference, colDifference) {
+    this.fields[this.selectedRow][this.selectedCol].item.setScale(1);
 
-        this.fields[this.selectedRow][this.selectedCol].item.moveItem(
-          0,
-          this.fields[this.nextRow][this.nextCol].y,
-          150
-        );
+    this.fields[this.selectedRow][this.selectedCol].item.moveItem(
+      this.fields[this.nextRow][this.nextCol].x * rowDifference,
+      this.fields[this.nextRow][this.nextCol].y * colDifference,
+      150
+    );
 
-        this.fields[this.nextRow][this.nextCol].item.moveItem(
-          0,
-          this.fields[this.selectedRow][this.selectedCol].y,
-          150
-        );
+    this.fields[this.nextRow][this.nextCol].item.moveItem(
+      this.fields[this.selectedRow][this.selectedCol].x * rowDifference,
+      this.fields[this.selectedRow][this.selectedCol].y * colDifference,
+      150
+    );
 
-        this.time.delayedCall(250, () => {
-          this.checkHeldItems();
-          this.destroyMatchedItems();
-        });
-
-        this.swipeSound.play();
-        this.resetFieldInfo();
-      }
-
-      if (colDifference === 0 && rowDifference === 1) {
-        this.fields[this.selectedRow][this.selectedCol].item.setScale(1);
-
-        this.fields[this.selectedRow][this.selectedCol].item.moveItem(
-          this.fields[this.nextRow][this.nextCol].x,
-          0,
-          150
-        );
-
-        this.fields[this.nextRow][this.nextCol].item.moveItem(
-          this.fields[this.selectedRow][this.selectedCol].x,
-          0,
-          150
-        );
-
-        this.time.delayedCall(250, () => {
-          this.checkHeldItems();
-          this.destroyMatchedItems();
-        });
-
-        this.swipeSound.play();
-        this.resetFieldInfo();
-      }
+    if (!this.gameStarted) {
+      this.initiateTheGame();
     }
   }
 
@@ -364,16 +353,14 @@ export default class FirstScene extends Phaser.Scene {
         this.burstSound.play();
         if (this.gameOverTimer + 25 <= 100) this.gameOverTimer += 15;
         else this.gameOverTimer = 100;
+        this.scoreText.text = `${this.scoreValue}`;
       });
 
       this.time.delayedCall(250, () => {
         this.checkForFallingItems();
       });
-    } else {
-      this.time.delayedCall(250, () => {
-        this.state = 0;
-      });
     }
+    return matchedItems;
   }
 
   checkForFallingItems() {
