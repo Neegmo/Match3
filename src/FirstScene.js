@@ -329,6 +329,7 @@ export default class FirstScene extends Phaser.Scene {
         if (this.fields[row][col].item === undefined) continue;
         if (this.fields[row][col].item.isMatched) {
           matchedItems = true;
+          this.state = 1;
           this.scoreValue++;
           this.fields[row][col].item.scaleItem(
             1.3,
