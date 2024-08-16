@@ -360,7 +360,7 @@ export default class FirstScene extends Phaser.Scene {
       this.time.delayedCall(250, () => {
         this.checkForFallingItems();
       });
-    }
+    } else this.state = 0;
     return matchedItems;
   }
 
@@ -424,7 +424,7 @@ export default class FirstScene extends Phaser.Scene {
     this.checkHeldItems();
     this.time.delayedCall(300, () => {
       this.destroyMatchedItems();
-      this.state = 0;
+      // this.state = 0;
     });
   }
 
