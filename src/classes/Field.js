@@ -13,7 +13,7 @@ export default class Field extends Phaser.GameObjects.Image {
     this.setTint(0x000000);
 
     this.posX = 120 + row * 140;
-    this.posY = 560 + col * 140;
+    this.posY = 180 + col * 140;
 
     this.setAlpha(0.1);
 

@@ -16,7 +16,7 @@ export default class GameOverScene extends Phaser.Scene {
     this.add
       .text(
         540,
-        980,
+        600,
         `Game Over\nYour Score:\n ${this.score}\nTap to restart`,
         {
           fontSize: "120px",

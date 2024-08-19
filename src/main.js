@@ -10,7 +10,7 @@ const config = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
     width: 1080,
-    height: 1960,
+    height: 1200,
   },
   scene: [FirstScene, GameOverScene],
   backgroundColor: "#ffffff",

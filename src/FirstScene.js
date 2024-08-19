@@ -7,12 +7,18 @@ export default class FirstScene extends Phaser.Scene {
     super("first-scene");
   }
 
-  preload() {
-    this.loadFont("troika", "Fonts/troika.otf");
+  standardDelay = 100;
 
-    this.load.image("board", "Board.png");
-    this.load.image("item", "Item.png");
-    this.load.image("timeBar", "TimeBar.png");
+  standardDelayBuffer = 50;
+
+  preload() {
+    this.loadFont("troika", "Assets/Fonts/troika.otf");
+
+    this.load.baseURL = "assets/";
+
+    this.load.image("board", "sprites/Board.png");
+    this.load.image("item", "sprites/Item.png");
+    this.load.image("timeBar", "sprites/TimeBar.png");
 
     this.load.audio("newBubbles", ["sounds/icon_drop_1.mp3"]);
     this.load.audio("burst1", ["sounds/match_1.mp3"]);
@@ -28,7 +34,7 @@ export default class FirstScene extends Phaser.Scene {
     this.initiateVariables();
 
     this.board = this.add
-      .image(540, 980, "board")
+      .image(540, 600, "board")
       //
       .setTint(0x808080);
     //   .setTint(0x69ebfc);
@@ -58,7 +64,29 @@ export default class FirstScene extends Phaser.Scene {
 
     if (this.gameOverTimer <= 0) {
       this.scene.start("game-over-scene", { score: this.scoreValue });
+      this.sendScoreToBackend();
     }
+  }
+
+  sendScoreToBackend() {
+    fetch("/update-score", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ score: this.scoreValue }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          console.log("Score updated successfully");
+        } else {
+          console.error("Failed to update score:", data.error);
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   }
 
   initiateTheGame() {
@@ -97,7 +125,7 @@ export default class FirstScene extends Phaser.Scene {
 
     this.scoreValue = 0;
     this.scoreText = this.add
-      .text(540, 400, `${this.scoreValue}`, {
+      .text(540, 50, `${this.scoreValue}`, {
         fontSize: "120px",
         fontFamily: "troika",
         align: "center",
@@ -114,7 +142,7 @@ export default class FirstScene extends Phaser.Scene {
   }
 
   createGameTimer() {
-    this.timeBar = this.add.image(540, 1550, "timeBar").setTint(0x808080);
+    this.timeBar = this.add.image(540, 1151, "timeBar").setTint(0x808080);
   }
 
   createSounds() {
@@ -210,18 +238,24 @@ export default class FirstScene extends Phaser.Scene {
 
       this.swapItems(rowDifference, colDifference);
 
-      this.time.delayedCall(250, () => {
-        this.checkHeldItems();
-        let shouldSwapBack = this.destroyMatchedItems();
-        if (!shouldSwapBack) {
-          console.log("ShouldSwapBack");
-          this.swapItems(rowDifference, colDifference);
-          this.time.delayedCall(250, () => {
-            this.state = 0;
-          });
+      this.time.delayedCall(
+        this.standardDelay + this.standardDelayBuffer,
+        () => {
+          this.checkHeldItems();
+          let shouldSwapBack = this.destroyMatchedItems();
+          if (!shouldSwapBack) {
+            console.log("ShouldSwapBack");
+            this.swapItems(rowDifference, colDifference);
+            this.time.delayedCall(
+              this.standardDelay + this.standardDelayBuffer,
+              () => {
+                this.state = 0;
+              }
+            );
+          }
+          this.resetFieldInfo();
         }
-        this.resetFieldInfo();
-      });
+      );
 
       this.swipeSound.play();
     }
@@ -244,13 +278,13 @@ export default class FirstScene extends Phaser.Scene {
     this.fields[this.selectedRow][this.selectedCol].item.moveItem(
       this.fields[this.nextRow][this.nextCol].x * rowDifference,
       this.fields[this.nextRow][this.nextCol].y * colDifference,
-      150
+      this.standardDelay
     );
 
     this.fields[this.nextRow][this.nextCol].item.moveItem(
       this.fields[this.selectedRow][this.selectedCol].x * rowDifference,
       this.fields[this.selectedRow][this.selectedCol].y * colDifference,
-      150
+      this.standardDelay
     );
 
     if (!this.gameStarted) {
@@ -330,12 +364,12 @@ export default class FirstScene extends Phaser.Scene {
         if (this.fields[row][col].item.isMatched) {
           matchedItems = true;
           this.state = 1;
-          this.scoreValue++;
+          if (this.gameStarted) this.scoreValue++;
           this.fields[row][col].item.scaleItem(
             1.3,
             1.3,
             "Cubic.easeIn",
-            150,
+            this.standardDelay,
             0,
             false,
             () => {
@@ -350,16 +384,19 @@ export default class FirstScene extends Phaser.Scene {
     }
 
     if (matchedItems) {
-      this.time.delayedCall(150, () => {
+      this.time.delayedCall(this.standardDelay, () => {
         this.burstSound.play();
         if (this.gameOverTimer + 25 <= 100) this.gameOverTimer += 15;
         else this.gameOverTimer = 100;
         this.scoreText.text = `${this.scoreValue}`;
       });
 
-      this.time.delayedCall(250, () => {
-        this.checkForFallingItems();
-      });
+      this.time.delayedCall(
+        this.standardDelay + this.standardDelayBuffer,
+        () => {
+          this.checkForFallingItems();
+        }
+      );
     } else this.state = 0;
     return matchedItems;
   }
@@ -385,18 +422,18 @@ export default class FirstScene extends Phaser.Scene {
           this.fields[row][col].item.moveItem(
             0,
             this.fields[row][col + finalFallingTarget].y,
-            150 * finalFallingTarget
+            this.standardDelay * finalFallingTarget
           );
         }
       }
     }
 
-    this.time.delayedCall(maxFallintTarget * 150 + 100, () => {
-      this.populateEmptyFields();
-    });
-    // this.time.delayedCall(maxFallintTarget * 150 + 200, () => {
-    //   this.destroyMatchedItems();
-    // });
+    this.time.delayedCall(
+      maxFallintTarget * this.standardDelay + this.standardDelayBuffer,
+      () => {
+        this.populateEmptyFields();
+      }
+    );
   }
 
   checkHeldItems() {
@@ -415,14 +452,21 @@ export default class FirstScene extends Phaser.Scene {
           this.newBubblesSound.play();
           const item = new Item(this, col, row);
           item.setScale(0.1);
-          item.scaleItem(1, 1, "Back.easeOut", 250, 0, false);
+          item.scaleItem(
+            1,
+            1,
+            "Back.easeOut",
+            this.standardDelay + this.standardDelayBuffer,
+            0,
+            false
+          );
           this.items.push(item);
           this.fields[row][col].item = item;
         }
       }
     }
     this.checkHeldItems();
-    this.time.delayedCall(300, () => {
+    this.time.delayedCall(this.standardDelay * 2, () => {
       this.destroyMatchedItems();
       // this.state = 0;
     });

@@ -22,7 +22,7 @@ export default class Item extends Phaser.GameObjects.Image {
     this.setDepth(2);
 
     this.posX = 120 + row * 140;
-    this.posY = 560 + col * 140;
+    this.posY = 180 + col * 140;
 
     this.setPosition(this.posX, this.posY);
 
