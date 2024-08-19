@@ -12,9 +12,9 @@ export default class FirstScene extends Phaser.Scene {
   standardDelayBuffer = 50;
 
   preload() {
-    this.loadFont("troika", "Assets/Fonts/troika.otf");
+    this.loadFont("troika", "fonts/troika.otf");
 
-    this.load.baseURL = "assets/";
+    // this.load.baseURL = "assets/";
 
     this.load.image("board", "sprites/Board.png");
     this.load.image("item", "sprites/Item.png");
